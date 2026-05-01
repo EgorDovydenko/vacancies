@@ -1,0 +1,24 @@
+# Зависимости
+node_modules/
+
+# Сборка
+dist/
+
+# Секреты
+.env
+
+# Логи
+*.log
+logs/
+
+# Данные бота (не коммитим историю публикаций)
+data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.suo
+*.user

@@ -1,0 +1,18 @@
+[Unit]
+Description=Vacancies Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/vacancies-bot
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=vacancies-bot
+EnvironmentFile=/home/ubuntu/vacancies-bot/.env
+
+[Install]
+WantedBy=multi-user.target

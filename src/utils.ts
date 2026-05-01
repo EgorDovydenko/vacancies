@@ -1,0 +1,115 @@
+/**
+ * Общие утилиты для извлечения стека и зарплаты из текста вакансии.
+ */
+
+// Ключевые слова стека — порядок важен (более длинные фразы раньше)
+const STACK_KEYWORDS: string[] = [
+  // Multi-word first
+  "react native", "next.js", "node.js", "styled-components",
+  "github actions", "gitlab ci",
+  // Frontend
+  "react", "vue", "angular", "svelte", "nuxt", "typescript", "javascript",
+  "html", "css", "sass", "scss", "webpack", "vite", "rollup", "babel",
+  "redux", "mobx", "zustand", "graphql", "apollo", "tailwind", "bootstrap",
+  "jest", "cypress", "playwright", "storybook",
+  // Backend
+  "express", "nestjs", "fastify", "koa", "hapi",
+  "python", "django", "flask", "fastapi", "sqlalchemy",
+  "golang", "gin", "echo", "fiber",
+  "java", "spring", "hibernate",
+  "php", "laravel", "symfony", "yii",
+  "ruby", "rails",
+  "rust", "actix",
+  "c#", ".net",
+  // Databases
+  "postgresql", "postgres", "mysql", "mariadb", "sqlite", "mongodb", "redis",
+  "elasticsearch", "clickhouse", "cassandra", "dynamodb",
+  // DevOps
+  "docker", "kubernetes", "k8s", "helm", "terraform", "ansible",
+  "aws", "gcp", "azure",
+  "nginx", "linux",
+  // Mobile
+  "flutter", "swift", "kotlin", "android", "ios",
+  // Testing
+  "selenium", "puppeteer",
+];
+
+/**
+ * Нормализует текст: слэши/запятые/скобки заменяются пробелами,
+ * чтобы "Python/Django", "React, TypeScript" корректно разбивались на токены.
+ */
+function normalizeText(text: string): string {
+  return text
+    .replace(/[/\\,;|()\[\]{}]+/g, " ")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+/**
+ * Извлекает список технологий из произвольного набора текстов.
+ */
+export function extractStack(...texts: string[]): string[] {
+  const combined = normalizeText(texts.join(" "));
+  const found: string[] = [];
+  const added = new Set<string>();
+  for (const kw of STACK_KEYWORDS) {
+    if (added.has(kw)) continue;
+    const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Граница: не буква/цифра с обеих сторон
+    const re = new RegExp("(?<![a-z0-9\\-])" + escaped + "(?![a-z0-9\\-])", "i");
+    if (re.test(combined)) {
+      found.push(kw);
+      added.add(kw);
+    }
+  }
+  return found;
+}
+
+// Валюты: символы и текстовые коды
+const CURRENCY_PATTERNS = [
+  { re: /\$|usd/i, label: "USD" },
+  { re: /€|eur/i, label: "EUR" },
+  { re: /byn|бел.*руб|br\b/i, label: "BYN" },
+  { re: /₽|rub|rur|руб/i, label: "RUB" },
+  { re: /₸|kzt|тенге/i, label: "KZT" },
+  { re: /gel|₾|лари/i, label: "GEL" },
+  { re: /amd|֏|драм/i, label: "AMD" },
+];
+
+/**
+ * Парсит строку зарплаты из ОТДЕЛЬНОГО поля (не из общего текста карточки).
+ * Возвращает строку вида "1500-3000 USD" или null если зарплата не найдена.
+ *
+ * ВАЖНО: не передавать сюда полный текст карточки — будет мусор.
+ */
+export function parseSalary(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const text = raw.replace(/\s+/g, " ").trim();
+  if (!text) return null;
+
+  // Должна быть хоть одна валюта — иначе это не зарплата
+  let currency = "";
+  for (const { re, label } of CURRENCY_PATTERNS) {
+    if (re.test(text)) { currency = label; break; }
+  }
+  if (!currency) return null;
+
+  // Диапазон: "1000 - 3000" или "1 000–3 000"
+  const rangeMatch = /([\d][\d\s]{1,9})\s*[-\u2013\u2014]\s*([\d][\d\s]{1,9})/.exec(text);
+  if (rangeMatch) {
+    const from = (rangeMatch[1] ?? "").replace(/\s/g, "");
+    const to = (rangeMatch[2] ?? "").replace(/\s/g, "");
+    if (from && to) return from + "\u2013" + to + " " + currency;
+  }
+
+  // Одиночное число: "от 1500" / "до 3000" / просто "2000"
+  const numMatch = /([\d][\d\s]{1,9})/.exec(text);
+  if (numMatch) {
+    const val = (numMatch[1] ?? "").replace(/\s/g, "");
+    if (!val) return null;
+    const prefix = /от|from/i.test(text) ? "от " : /до|up to/i.test(text) ? "до " : "";
+    return prefix + val + " " + currency;
+  }
+
+  return null;
+}
