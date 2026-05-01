@@ -28,6 +28,13 @@ function intEnv(name: string, fallback: number): number {
   return n;
 }
 
+/** Читает булеву переменную окружения. Любое значение кроме "false" считается true. */
+function boolEnv(name: string, fallback: boolean): boolean {
+  const raw = process.env[name];
+  if (raw === undefined) return fallback;
+  return raw.trim().toLowerCase() !== "false";
+}
+
 export const config = {
   /** Telegram */
   get telegram() {
@@ -54,6 +61,15 @@ export const config = {
       maxVacanciesPerRun: intEnv("MAX_VACANCIES_PER_RUN", 5),
       storeTtlDays: intEnv("STORE_TTL_DAYS", 30),
       logLevel: optionalEnv("LOG_LEVEL", "info"),
+    } as const;
+  },
+
+  /** Включённые источники вакансий */
+  get sources() {
+    return {
+      hh: boolEnv("SOURCE_HH", true),
+      rabotaby: boolEnv("SOURCE_RABOTABY", true),
+      devby: boolEnv("SOURCE_DEVBY", true),
     } as const;
   },
 } as const;

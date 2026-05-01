@@ -1,4 +1,4 @@
-import { sources } from "./sources";
+import { getSources } from "./sources";
 import { sendMessage } from "./telegram";
 import { formatVacancy } from "./formatter";
 import { PublishedStore } from "./store";
@@ -32,7 +32,7 @@ async function publishVacancy(vacancy: Vacancy, tag: string): Promise<void> {
 // ─── Обработка одного источника/страны ───────────────────────────────────────
 
 async function processSource(
-  source: (typeof sources)[number],
+  source: ReturnType<typeof getSources>[number],
   country: Country,
 ): Promise<number> {
   const parsed = await source.scrape(country);
@@ -68,7 +68,7 @@ export async function runPublishCycle(): Promise<void> {
   logger.info("═══ Запуск цикла публикации ═══");
   let total = 0;
 
-  for (const source of sources) {
+  for (const source of getSources()) {
     for (const country of TARGET_COUNTRIES) {
       if (!source.countries.includes(country)) continue;
       try {

@@ -2,13 +2,17 @@ import { hhSource } from "./hh";
 import { rabotaBySource } from "./rabotaby";
 import { devBySource } from "./devby";
 import { Source } from "../types";
+import { config } from "../config";
 
 /**
  * Реестр всех источников вакансий.
- * Добавляй новые источники сюда — они автоматически подхватятся планировщиком.
+ * Источник включается/отключается через переменные окружения SOURCE_HH, SOURCE_RABOTABY, SOURCE_DEVBY.
  */
-export const sources: Source[] = [
-  hhSource, // hh.ru / hh.by / hh.kz / hh.am / hh.ge
-  rabotaBySource, // rabota.by
-  devBySource, // jobs.dev.by
-];
+export function getSources(): Source[] {
+  const { hh, rabotaby, devby } = config.sources;
+  const sources: Source[] = [];
+  if (hh) sources.push(hhSource);
+  if (rabotaby) sources.push(rabotaBySource);
+  if (devby) sources.push(devBySource);
+  return sources;
+}
