@@ -52,6 +52,7 @@ interface CardData {
   salary: string | null;
   stack: string[];
   location: string;
+  cardText: string;
   url: string;
 }
 
@@ -91,6 +92,7 @@ function parseCard($: Cheerio$, el: cheerio.Element): CardData | null {
     salary: parseSalary(salaryRaw) ?? parseSalary(cardText),
     stack: extractStack(title, cardText),
     location,
+    cardText,
     url: `${BASE_URL}/vacancy/${idMatch[1]}`,
   };
 }
@@ -139,7 +141,7 @@ export const rabotaBySource: Source = {
               company: card.company,
               salary: card.salary,
               stack: card.stack,
-              workFormat: detectWorkFormat(`${card.title} ${card.location}`),
+              workFormat: detectWorkFormat(card.cardText),
               country: detectCountry(card.location, "BY"),
               city: extractCity(card.location, "Минск"),
               url: card.url,

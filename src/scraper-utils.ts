@@ -29,17 +29,26 @@ export function sleep(ms: number): Promise<void> {
 
 // ─── Формат работы ────────────────────────────────────────────────────────────
 
-const REMOTE_RE = /удалённ|удалёнк|remote/i;
-const HYBRID_RE = /гибрид|hybrid/i;
+// Фразы с rabota.by / hh.ru / dev.by:
+//   "Формат работы: удалённо", "Можно удалённо", "удалённый формат", "remote"
+//   "Формат работы: ... гибрид", "гибридный формат", "hybrid"
+//   "Формат работы: на месте работодателя", "Работа на месте работодателя", "в офисе", "office"
+const REMOTE_RE = /удал[её]нн|дистанционн|remote/i;
+const HYBRID_RE = /гибридный\s+формат|гибрид|hybrid/i;
+const OFFICE_RE_1 = /на\s+месте\s+работодателя/i;
+const OFFICE_RE_2 = /в\s+офисе|\boffice\b/i;
 
 /**
- * Определяет формат работы по тексту.
- * Если не удалось определить явно — возвращает ["office"].
+ * Определяет формат(ы) работы по тексту.
+ * Поддерживает одновременно несколько форматов (через "или", "/", ",").
+ * Если не удалось определить — возвращает ["office"].
  */
 export function detectWorkFormat(text: string): WorkFormat[] {
   const formats: WorkFormat[] = [];
-  if (REMOTE_RE.test(text)) formats.push("remote");
+  if (OFFICE_RE_1.test(text) || OFFICE_RE_2.test(text)) formats.push("office");
   if (HYBRID_RE.test(text)) formats.push("hybrid");
+  if (REMOTE_RE.test(text)) formats.push("remote");
+  // Дефолт — офис (когда ничего не нашли, или явно указан офис)
   return formats.length > 0 ? formats : ["office"];
 }
 
