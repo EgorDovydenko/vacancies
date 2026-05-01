@@ -30,7 +30,7 @@ export function formatVacancy(vacancy: Vacancy): string {
   const salary = vacancy.salary ?? "не указана";
   const stack =
     vacancy.stack.length > 0
-      ? vacancy.stack.map((s) => `<code>${s}</code>`).join(" ")
+      ? vacancy.stack.map((s) => `<code>${s}</code>`).join(" | ")
       : "не указан";
   const city = vacancy.city ? ` · ${vacancy.city}` : "";
 

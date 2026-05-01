@@ -13,6 +13,29 @@ import {
   extractCity,
 } from "../scraper-utils";
 
+// Языки вида "Английский — B2 — Средне-продвинутый" — не считаем стеком
+const LANGUAGE_RE = /^[а-яёА-ЯЁ]+\s*—\s*(A1|A2|B1|B2|C1|C2)/i;
+
+/** Загружает страницу вакансии и возвращает до 4 ключевых навыков (без языков) */
+async function fetchVacancySkills(url: string): Promise<string[]> {
+  try {
+    const { data: html } = await axios.get<string>(url, {
+      headers: BROWSER_HEADERS,
+      timeout: 15_000,
+    });
+    const $ = cheerio.load(html);
+    const skills: string[] = [];
+    $("[data-qa='skills-element']").each((_i, el) => {
+      if (skills.length >= 4) return false;
+      const text = $(el).text().trim();
+      if (text && !LANGUAGE_RE.test(text)) skills.push(text);
+    });
+    return skills;
+  } catch {
+    return [];
+  }
+}
+
 // ─── Константы ────────────────────────────────────────────────────────────────
 
 const BASE_URL = "https://rabota.by";
@@ -126,21 +149,26 @@ export const rabotaBySource: Source = {
           });
 
           const $ = cheerio.load(html);
-          let count = 0;
+          const cards: CardData[] = [];
 
           $("[data-qa='serp-item__title']").each((_i, el) => {
-            if (count >= maxVacanciesPerRun) return false;
-
+            if (cards.length >= maxVacanciesPerRun) return false;
             const card = parseCard($, el);
             if (!card || seenIds.has(card.sourceId)) return;
             seenIds.add(card.sourceId);
+            cards.push(card);
+          });
+
+          for (const card of cards) {
+            const skills = await fetchVacancySkills(card.url);
+            const stack = skills.length > 0 ? skills : card.stack;
 
             results.push({
               sourceId: card.sourceId,
               title: card.title,
               company: card.company,
               salary: card.salary,
-              stack: card.stack,
+              stack,
               workFormat: detectWorkFormat(card.cardText),
               country: detectCountry(card.location, "BY"),
               city: extractCity(card.location, "Минск"),
@@ -149,11 +177,11 @@ export const rabotaBySource: Source = {
               category,
               publishedAt: new Date(),
             });
-            count++;
-          });
+            await sleep(500); // небольшая пауза между страницами вакансий
+          }
 
           logger.info(
-            `[rabota.by] ${category} / "${keyword}": найдено ${count} вакансий`,
+            `[rabota.by] ${category} / "${keyword}": найдено ${cards.length} вакансий`,
           );
         } catch (err) {
           logger.error(
