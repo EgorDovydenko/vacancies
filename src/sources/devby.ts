@@ -83,7 +83,7 @@ export const devBySource: Source = {
           .first()
           .text()
           .trim();
-        const salary = parseSalary(rawSalary);
+        const salary = parseSalary(rawSalary) ?? parseSalary(cardText);
 
         results.push({
           sourceId,

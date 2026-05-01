@@ -7,7 +7,9 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "dev:watch": "nodemon --exec ts-node src/index.ts"
+    "dev:watch": "nodemon --exec ts-node src/index.ts",
+    "store:clear": "node -e \"require('fs').writeFileSync('data/published.json', '{}', 'utf8'); console.log('Store cleared.')\"",
+    "store:show": "node -e \"const d=require('./data/published.json'); console.log('Records:', Object.keys(d).length);\""
   },
   "dependencies": {
     "axios": "^1.7.2",

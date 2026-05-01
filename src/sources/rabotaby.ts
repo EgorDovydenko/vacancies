@@ -88,7 +88,7 @@ function parseCard($: Cheerio$, el: cheerio.Element): CardData | null {
     sourceId: `rabotaby_${idMatch[1]}`,
     title,
     company: company || "Не указан",
-    salary: parseSalary(salaryRaw),
+    salary: parseSalary(salaryRaw) ?? parseSalary(cardText),
     stack: extractStack(title, cardText),
     location,
     url: `${BASE_URL}/vacancy/${idMatch[1]}`,
