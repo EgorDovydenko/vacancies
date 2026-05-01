@@ -160,15 +160,12 @@ export const rabotaBySource: Source = {
           });
 
           for (const card of cards) {
-            const skills = await fetchVacancySkills(card.url);
-            const stack = skills.length > 0 ? skills : card.stack;
-
             results.push({
               sourceId: card.sourceId,
               title: card.title,
               company: card.company,
               salary: card.salary,
-              stack,
+              stack: card.stack,
               workFormat: detectWorkFormat(card.cardText),
               country: detectCountry(card.location, "BY"),
               city: extractCity(card.location, "Минск"),
@@ -177,7 +174,6 @@ export const rabotaBySource: Source = {
               category,
               publishedAt: new Date(),
             });
-            await sleep(500); // небольшая пауза между страницами вакансий
           }
 
           logger.info(
@@ -193,5 +189,11 @@ export const rabotaBySource: Source = {
     }
 
     return results;
+  },
+
+  async enrichVacancy(vacancy: ParsedVacancy): Promise<Partial<ParsedVacancy>> {
+    const skills = await fetchVacancySkills(vacancy.url);
+    if (skills.length > 0) return { stack: skills };
+    return {};
   },
 };

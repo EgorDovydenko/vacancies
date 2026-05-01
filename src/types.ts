@@ -30,4 +30,11 @@ export interface Source {
   name: string;
   countries: Country[];
   scrape(country: Country): Promise<ParsedVacancy[]>;
+  /**
+   * Опциональный метод для обогащения вакансии данными со страницы самой вакансии.
+   * Вызывается после scrape() для каждой новой (ещё не опубликованной) вакансии.
+   * Реализуется в парсере если нужные данные (стек, формат работы и т.д.)
+   * доступны только на отдельной странице вакансии, а не в листинге.
+   */
+  enrichVacancy?(vacancy: ParsedVacancy): Promise<Partial<ParsedVacancy>>;
 }

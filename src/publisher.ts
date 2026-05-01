@@ -46,7 +46,21 @@ async function processSource(
       logger.debug(`[${tag}] Уже опубликована: ${item.sourceId}`);
       continue;
     }
-    const vacancy: Vacancy = { ...item, id: item.sourceId };
+
+    // Обогащаем данные со страницы вакансии (стек, формат работы и т.д.)
+    let enriched = item;
+    if (source.enrichVacancy) {
+      try {
+        const extra = await source.enrichVacancy(item);
+        enriched = { ...item, ...extra };
+      } catch (err) {
+        logger.warn(
+          `[${tag}] Ошибка enrichVacancy для ${item.sourceId}: ${String(err)}`,
+        );
+      }
+    }
+
+    const vacancy: Vacancy = { ...enriched, id: item.sourceId };
     try {
       await publishVacancy(vacancy, tag);
       published++;

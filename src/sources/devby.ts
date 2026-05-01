@@ -3,7 +3,7 @@ import * as cheerio from "cheerio";
 import { ParsedVacancy, Country, Source } from "../types";
 import logger from "../logger";
 import { config } from "../config";
-import { extractStack, parseSalary } from "../utils";
+import { parseSalary } from "../utils";
 import {
   BROWSER_HEADERS,
   sleep,
@@ -18,6 +18,37 @@ import {
  */
 
 const BASE_URL = "https://jobs.devby.io";
+
+/** Загружает страницу вакансии dev.by и возвращает обогащённые данные */
+async function fetchVacancyDetails(
+  url: string,
+): Promise<Partial<ParsedVacancy>> {
+  try {
+    const { data: html } = await axios.get<string>(url, {
+      headers: BROWSER_HEADERS,
+      timeout: 15_000,
+    });
+    const $ = cheerio.load(html);
+
+    // Стек — теги из блока .vacancy__tags
+    const stack: string[] = [];
+    $(".vacancy__tags a").each((_i, el) => {
+      if (stack.length >= 4) return false;
+      const t = $(el).text().trim();
+      if (t) stack.push(t);
+    });
+
+    // Формат работы — со страницы вакансии точнее, чем с листинга
+    const workFormat = detectWorkFormat($.root().text());
+
+    return {
+      ...(stack.length > 0 ? { stack } : {}),
+      workFormat,
+    };
+  } catch {
+    return {};
+  }
+}
 
 export const devBySource: Source = {
   name: "dev.by",
@@ -63,21 +94,7 @@ export const devBySource: Source = {
           .text()
           .trim();
 
-        // Теги технологий, явно указанные на сайте
-        const tagStack: string[] = [];
-        $card
-          .find(".vacancies-list-item__technology-tag__name")
-          .each((_j, tag) => {
-            const t = $(tag).text().trim();
-            if (t) tagStack.push(t);
-          });
-
         const cardText = $card.text();
-        const detectedStack = extractStack(title, tagStack.join(" "), cardText);
-        // Явные теги имеют приоритет над autodetect; если autodetect нашёл больше — берём его
-        const stack =
-          detectedStack.length >= tagStack.length ? detectedStack : tagStack;
-
         const rawSalary = $card
           .find(".vacancies-list-item__salary")
           .first()
@@ -90,7 +107,7 @@ export const devBySource: Source = {
           title,
           company: company || "Не указан",
           salary: salary ?? null,
-          stack,
+          stack: [], // будет заполнен в enrichVacancy
           workFormat: detectWorkFormat(cardText),
           country: "BY",
           city: "Минск",
@@ -109,5 +126,9 @@ export const devBySource: Source = {
     }
 
     return results;
+  },
+
+  async enrichVacancy(vacancy: ParsedVacancy): Promise<Partial<ParsedVacancy>> {
+    return fetchVacancyDetails(vacancy.url);
   },
 };
