@@ -20,11 +20,27 @@ const FORMAT_LABEL: Record<WorkFormat, string> = {
   hybrid: "🔀 Гибрид",
 };
 
+function buildLocationTag(vacancy: Vacancy): string {
+  if (vacancy.country) return `#${vacancy.country.toLowerCase()}`;
+  if (vacancy.city)
+    return `#${vacancy.city.toLowerCase().replaceAll(/\s+/g, "_")}`;
+  return "#other";
+}
+
 /**
  * Форматирует вакансию в красивое Telegram-сообщение (HTML-разметка)
  */
 export function formatVacancy(vacancy: Vacancy): string {
-  const flag = COUNTRY_FLAGS[vacancy.country] ?? "";
+  const flag = vacancy.country
+    ? (COUNTRY_FLAGS[vacancy.country] ?? "🌍")
+    : "🌍";
+  const countryPart = vacancy.country ?? "";
+  const cityPart = vacancy.city ?? "";
+  const locationStr =
+    [flag, countryPart, cityPart ? `· ${cityPart}` : ""]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || "🌍 Не указана";
   const catEmoji = CATEGORY_EMOJI[vacancy.category];
   const formats = vacancy.workFormat.map((f) => FORMAT_LABEL[f]).join(" | ");
   const salary = vacancy.salary ?? "не указана";
@@ -32,7 +48,7 @@ export function formatVacancy(vacancy: Vacancy): string {
     vacancy.stack.length > 0
       ? vacancy.stack.map((s) => `<code>${s}</code>`).join(" | ")
       : "не указан";
-  const city = vacancy.city ? ` · ${vacancy.city}` : "";
+  const locationTag = buildLocationTag(vacancy);
 
   return [
     `${catEmoji} <b>${escapeHtml(vacancy.title)}</b>`,
@@ -40,12 +56,12 @@ export function formatVacancy(vacancy: Vacancy): string {
     `🏢 <b>Компания:</b> ${escapeHtml(vacancy.company)}`,
     `💰 <b>Зарплата:</b> ${escapeHtml(salary)}`,
     `🛠 <b>Стек:</b> ${stack}`,
-    `📍 <b>Локация:</b> ${flag} ${vacancy.country}${city}`,
+    `📍 <b>Локация:</b> ${locationStr}`,
     `📋 <b>Формат:</b> ${formats}`,
     ``,
     `🔗 <a href="${vacancy.url}">Откликнуться (${vacancy.source})</a>`,
     ``,
-    `#${vacancy.category} #${vacancy.country.toLowerCase()} #${vacancy.source.replaceAll(/\W/g, "")}`,
+    `#${vacancy.category} ${locationTag} #${vacancy.source.replaceAll(/\W/g, "")}`,
   ].join("\n");
 }
 

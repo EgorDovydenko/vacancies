@@ -9,6 +9,7 @@ import {
   sleep,
   detectWorkFormat,
   detectCategory,
+  detectCountry,
 } from "../scraper-utils";
 
 /**
@@ -38,11 +39,35 @@ async function fetchVacancyDetails(
       if (t) stack.push(t);
     });
 
-    // Формат работы — со страницы вакансии точнее, чем с листинга
-    const workFormat = detectWorkFormat($.root().text());
+    // Город из блока "Город: <значение>"
+    let rawCity = "";
+    $(".vacancy__info-block__item").each((_i, el) => {
+      const label = $(el).clone().children().remove().end().text().trim();
+      if (label.startsWith("Город:")) {
+        rawCity = $(el).find(".vacancy__info-block__item-").text().trim();
+        return false;
+      }
+    });
+
+    // Режим работы
+    let rawWorkMode = "";
+    $(".vacancy__info-block__item").each((_i, el) => {
+      const label = $(el).clone().children().remove().end().text().trim();
+      if (label.startsWith("Режим работы:")) {
+        rawWorkMode = $(el).find(".vacancy__info-block__item-").text().trim();
+        return false;
+      }
+    });
+
+    // Определяем страну и город
+    const city = rawCity ? rawCity.split(",")[0]?.trim() : "";
+    const country = detectCountry(rawCity);
+    const workFormat = detectWorkFormat(rawWorkMode || $.root().text());
 
     return {
       ...(stack.length > 0 ? { stack } : {}),
+      ...(city ? { city } : {}),
+      ...(country === null ? {} : { country }),
       workFormat,
     };
   } catch {
@@ -109,8 +134,8 @@ export const devBySource: Source = {
           salary: salary ?? null,
           stack: [], // будет заполнен в enrichVacancy
           workFormat: detectWorkFormat(cardText),
-          country: "BY",
-          city: "Минск",
+          country: null, // будет определена в enrichVacancy по городу
+          city: null, // будет определён в enrichVacancy
           url: fullUrl,
           source: "dev.by",
           category: detectCategory(title),

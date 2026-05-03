@@ -112,12 +112,13 @@ const CITY_TO_COUNTRY: ReadonlyMap<string, Country> = new Map([
 
 /**
  * Определяет страну по строке с городом/локацией.
- * @param fallback - страна по умолчанию, если город не распознан
+ * Возвращает null если город не распознан — вакансия из неизвестной локации.
+ * @param fallback - явно задать дефолт (используется если источник точно знает страну)
  */
 export function detectCountry(
   locationText: string,
-  fallback: Country = "BY",
-): Country {
+  fallback: Country | null = null,
+): Country | null {
   const lower = locationText.toLowerCase();
   for (const [city, country] of CITY_TO_COUNTRY) {
     if (lower.includes(city)) return country;

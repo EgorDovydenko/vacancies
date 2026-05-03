@@ -167,7 +167,7 @@ export const rabotaBySource: Source = {
               salary: card.salary,
               stack: card.stack,
               workFormat: detectWorkFormat(card.cardText),
-              country: detectCountry(card.location, "BY"),
+              country: detectCountry(card.location),
               city: extractCity(card.location, "Минск"),
               url: card.url,
               source: "rabota.by",

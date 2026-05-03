@@ -14,7 +14,8 @@ export interface Vacancy {
   salary: string | null;
   stack: string[];
   workFormat: WorkFormat[];
-  country: Country;
+  /** null — страна не определена (нестандартная локация: Ташкент, Лимасол и т.д.) */
+  country: Country | null;
   city: string | null;
   url: string;
   source: string;
