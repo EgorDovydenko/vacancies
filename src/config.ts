@@ -71,6 +71,7 @@ export const config = {
       rabotaby: boolEnv("SOURCE_RABOTABY", true),
       devby: boolEnv("SOURCE_DEVBY", true),
       habr: boolEnv("SOURCE_HABR", true),
+      getmatch: boolEnv("SOURCE_GETMATCH", true),
     } as const;
   },
 } as const;

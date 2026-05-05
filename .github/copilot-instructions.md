@@ -51,6 +51,7 @@ src/
     rabotaby.ts      — rabota.by (HTML, движок hh.ru)
     devby.ts         — jobs.devby.io (HTML)
     habr.ts          — career.habr.com (JSON из <script> тега, React SPA)
+    getmatch.ts      — getmatch.ru (REST API /api/offers, JSON)
 data/
   published.json     — персистентное хранилище ID опубликованных вакансий
 ```
@@ -132,6 +133,7 @@ SOURCE_HH=true/false
 SOURCE_RABOTABY=true/false
 SOURCE_DEVBY=true/false
 SOURCE_HABR=true/false
+SOURCE_GETMATCH=true/false
 ```
 
 ---
