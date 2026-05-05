@@ -70,6 +70,7 @@ export const config = {
       hh: boolEnv("SOURCE_HH", true),
       rabotaby: boolEnv("SOURCE_RABOTABY", true),
       devby: boolEnv("SOURCE_DEVBY", true),
+      habr: boolEnv("SOURCE_HABR", true),
     } as const;
   },
 } as const;

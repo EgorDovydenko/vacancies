@@ -12,6 +12,7 @@ import {
   detectCountry,
   extractCity,
 } from "../scraper-utils";
+import { SEARCH_QUERIES as CATEGORIES } from "../search-queries";
 
 // Языки вида "Английский — B2 — Средне-продвинутый" — не считаем стеком
 const LANGUAGE_RE = /^[а-яёА-ЯЁ]+\s*—\s*(A1|A2|B1|B2|C1|C2)/i;
@@ -45,26 +46,6 @@ const BASE_URL = "https://rabota.by";
  * Фильтрует нерелевантные сферы до выдачи результатов.
  */
 const IT_INDUSTRY = "7";
-
-/** Поисковые запросы по категориям */
-const CATEGORIES: Record<JobCategory, string[]> = {
-  frontend: [
-    "frontend developer",
-    "frontend разработчик",
-    "react разработчик",
-    "vue разработчик",
-    "angular разработчик",
-  ],
-  backend: [
-    "backend developer",
-    "backend разработчик",
-    "node.js разработчик",
-    "php разработчик",
-    "python разработчик",
-    "golang разработчик",
-  ],
-  fullstack: ["fullstack developer", "fullstack разработчик"],
-};
 
 // ─── Парсинг карточки ─────────────────────────────────────────────────────────
 

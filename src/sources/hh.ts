@@ -4,6 +4,7 @@ import logger from "../logger";
 import { config } from "../config";
 import { extractStack } from "../utils";
 import { sleep, detectWorkFormat, detectCategory } from "../scraper-utils";
+import { SEARCH_QUERIES } from "../search-queries";
 
 // --- Constants ---
 
@@ -17,30 +18,25 @@ const COUNTRY_AREA: Record<Country, string> = {
   GE: "28",
 };
 
-const SEARCH_QUERIES: Record<JobCategory, string[]> = {
-  frontend: [
-    "frontend разработчик",
-    "react разработчик",
-    "vue разработчик",
-    "svelte разработчик",
-  ],
-  backend: [
-    "backend разработчик",
-    "python разработчик",
-    "golang разработчик",
-    "php разработчик",
-  ],
-  fullstack: ["fullstack разработчик"],
-};
-
 const CURRENCY_SYMBOL: Record<string, string> = {
-  RUR: "\u20BD", RUB: "\u20BD", USD: "$", EUR: "\u20AC",
-  KZT: "\u20B8", GEL: "\u20BE", AMD: "\u058F", BYR: "Br", BYN: "Br",
+  RUR: "\u20BD",
+  RUB: "\u20BD",
+  USD: "$",
+  EUR: "\u20AC",
+  KZT: "\u20B8",
+  GEL: "\u20BE",
+  AMD: "\u058F",
+  BYR: "Br",
+  BYN: "Br",
 };
 
 // --- HH API Types ---
 
-interface HHSalary { from: number | null; to: number | null; currency: string }
+interface HHSalary {
+  from: number | null;
+  to: number | null;
+  currency: string;
+}
 interface HHVacancy {
   id: string;
   name: string;
@@ -52,26 +48,43 @@ interface HHVacancy {
   alternate_url: string;
   published_at: string;
 }
-interface HHResponse { items: HHVacancy[]; found: number }
+interface HHResponse {
+  items: HHVacancy[];
+  found: number;
+}
 
 // --- OAuth Cache ---
 
-interface TokenCache { token: string; expiresAt: number }
+interface TokenCache {
+  token: string;
+  expiresAt: number;
+}
 let tokenCache: TokenCache | null = null;
 
 async function getAccessToken(): Promise<string | null> {
   const { apiToken, clientId, clientSecret } = config.hh;
   if (apiToken) return apiToken;
   if (!clientId || !clientSecret) return null;
-  if (tokenCache && tokenCache.expiresAt > Date.now() + 60_000) return tokenCache.token;
+  if (tokenCache && tokenCache.expiresAt > Date.now() + 60_000)
+    return tokenCache.token;
   try {
     logger.info("[HH] Получаем OAuth токен...");
-    const { data } = await axios.post<{ access_token: string; expires_in: number }>(
+    const { data } = await axios.post<{
+      access_token: string;
+      expires_in: number;
+    }>(
       "https://hh.ru/oauth/token",
-      new URLSearchParams({ grant_type: "client_credentials", client_id: clientId, client_secret: clientSecret }),
+      new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: clientId,
+        client_secret: clientSecret,
+      }),
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
     );
-    tokenCache = { token: data.access_token, expiresAt: Date.now() + data.expires_in * 1_000 };
+    tokenCache = {
+      token: data.access_token,
+      expiresAt: Date.now() + data.expires_in * 1_000,
+    };
     logger.info("[HH] OAuth токен получен");
     return tokenCache.token;
   } catch (err) {
@@ -94,14 +107,35 @@ function formatSalary(s: HHSalary | null): string | null {
 // --- API Requests ---
 
 async function fetchVacancies(
-  query: string, category: JobCategory, country: Country,
-  areaId: string, headers: Record<string, string>, maxPerRun: number,
+  query: string,
+  category: JobCategory,
+  country: Country,
+  areaId: string,
+  headers: Record<string, string>,
+  maxPerRun: number,
 ): Promise<ParsedVacancy[]> {
   const { data } = await axios.get<HHResponse>(HH_BASE + "/vacancies", {
     headers,
-    params: { text: query, area: areaId, per_page: maxPerRun, page: 0, order_by: "publication_time" },
+    params: {
+      text: query,
+      area: areaId,
+      per_page: maxPerRun,
+      page: 0,
+      order_by: "publication_time",
+    },
   });
-  logger.info("[HH] " + category + "/" + country + " \"" + query + "\": всего " + data.found + ", получено " + data.items.length);
+  logger.info(
+    "[HH] " +
+      category +
+      "/" +
+      country +
+      ' "' +
+      query +
+      '": всего ' +
+      data.found +
+      ", получено " +
+      data.items.length,
+  );
   return data.items.map((item) => ({
     sourceId: "hh_" + item.id,
     title: item.name,
@@ -119,36 +153,72 @@ async function fetchVacancies(
 }
 
 async function scrapeQuery(
-  query: string, cat: JobCategory, country: Country,
-  areaId: string, headers: Record<string, string>,
-  seenIds: Set<string>, out: ParsedVacancy[],
+  query: string,
+  cat: JobCategory,
+  country: Country,
+  areaId: string,
+  headers: Record<string, string>,
+  seenIds: Set<string>,
+  out: ParsedVacancy[],
 ): Promise<boolean> {
   try {
-    const chunk = await fetchVacancies(query, cat, country, areaId, headers, config.bot.maxVacanciesPerRun);
+    const chunk = await fetchVacancies(
+      query,
+      cat,
+      country,
+      areaId,
+      headers,
+      config.bot.maxVacanciesPerRun,
+    );
     for (const v of chunk) {
-      if (!seenIds.has(v.sourceId)) { seenIds.add(v.sourceId); out.push(v); }
+      if (!seenIds.has(v.sourceId)) {
+        seenIds.add(v.sourceId);
+        out.push(v);
+      }
     }
     return true;
   } catch (err) {
     const status = (err as { response?: { status?: number } }).response?.status;
     if (status === 403) {
-      logger.error("[HH] 403 Forbidden — токен невалиден. Обнови HH_API_TOKEN в .env");
+      logger.error(
+        "[HH] 403 Forbidden — токен невалиден. Обнови HH_API_TOKEN в .env",
+      );
       return false;
     }
-    logger.error("[HH] Ошибка " + cat + "/" + country + " \"" + query + "\": " + String(err));
+    logger.error(
+      "[HH] Ошибка " + cat + "/" + country + ' "' + query + '": ' + String(err),
+    );
     return true;
   }
 }
 
-async function scrapeCountry(country: Country, areaId: string, headers: Record<string, string>): Promise<ParsedVacancy[]> {
+async function scrapeCountry(
+  country: Country,
+  areaId: string,
+  headers: Record<string, string>,
+): Promise<ParsedVacancy[]> {
   const all: ParsedVacancy[] = [];
   const seenIds = new Set<string>();
   let aborted = false;
-  for (const [cat, queries] of Object.entries(SEARCH_QUERIES) as [JobCategory, string[]][]) {
+  for (const [cat, queries] of Object.entries(SEARCH_QUERIES) as [
+    JobCategory,
+    string[],
+  ][]) {
     for (const query of queries) {
       if (aborted) break;
-      const ok = await scrapeQuery(query, cat, country, areaId, headers, seenIds, all);
-      if (!ok) { aborted = true; break; }
+      const ok = await scrapeQuery(
+        query,
+        cat,
+        country,
+        areaId,
+        headers,
+        seenIds,
+        all,
+      );
+      if (!ok) {
+        aborted = true;
+        break;
+      }
       await sleep(config.bot.requestDelayMs);
     }
   }
@@ -163,7 +233,9 @@ export const hhSource: Source = {
   async scrape(country: Country): Promise<ParsedVacancy[]> {
     const token = await getAccessToken();
     if (!token) {
-      logger.warn("[HH] Нет токена! Задай HH_API_TOKEN или HH_CLIENT_ID + HH_CLIENT_SECRET в .env");
+      logger.warn(
+        "[HH] Нет токена! Задай HH_API_TOKEN или HH_CLIENT_ID + HH_CLIENT_SECRET в .env",
+      );
       return [];
     }
     return scrapeCountry(country, COUNTRY_AREA[country], {

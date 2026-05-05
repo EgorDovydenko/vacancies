@@ -30,12 +30,18 @@ export interface ParsedVacancy extends Omit<Vacancy, "id"> {
 export interface Source {
   name: string;
   countries: Country[];
-  scrape(country: Country): Promise<ParsedVacancy[]>;
+  /**
+   * Парсинг с фильтрацией по конкретной стране (hh.ru, rabota.by, dev.by).
+   * Либо реализуется scrape(), либо scrapeAll() — не оба сразу.
+   */
+  scrape?(country: Country): Promise<ParsedVacancy[]>;
+  /**
+   * Парсинг без привязки к стране — один запрос на весь сайт,
+   * страна определяется из данных самой вакансии (habr.career и аналоги).
+   */
+  scrapeAll?(): Promise<ParsedVacancy[]>;
   /**
    * Опциональный метод для обогащения вакансии данными со страницы самой вакансии.
-   * Вызывается после scrape() для каждой новой (ещё не опубликованной) вакансии.
-   * Реализуется в парсере если нужные данные (стек, формат работы и т.д.)
-   * доступны только на отдельной странице вакансии, а не в листинге.
    */
   enrichVacancy?(vacancy: ParsedVacancy): Promise<Partial<ParsedVacancy>>;
 }
