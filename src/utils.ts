@@ -205,11 +205,15 @@ export function parseSalary(raw: string | null | undefined): string | null {
   if (numMatch) {
     const val = (numMatch[1] ?? "").replace(/\s/g, "");
     if (!val || +val < 100) return null;
-    // Признак "от"/"до" ищем в том же окне
-    const hasFrom = /(?:^|\s)от(?:\s|$)|(?:^|\s)from(?:\s|$)/i.test(window);
-    // "до вычета", "до уплаты", "до удержания" — не признак "до X"
-    const hasTo = /(?:^|\s)до\s+\d|up to/i.test(window);
-    const prefix = hasFrom ? "от\u00a0" : hasTo ? "до\u00a0" : "";
+    // Ищем префикс "от"/"до" в тексте ДО числа в окне.
+    // Не требуем пробел перед "от"/"до" — на rabota.by встречается ")до 230 000 ₽".
+    // "до вычета", "до уплаты" — не попадут, т.к. после "до" нет цифры.
+    const beforeNum = window.slice(0, numMatch.index);
+    const hasFrom = /от\s*$|from\s*$/i.test(beforeNum);
+    const hasTo = /до\s*$|up\s+to\s*$/i.test(beforeNum);
+    let prefix = "";
+    if (hasFrom) prefix = "от\u00a0";
+    else if (hasTo) prefix = "до\u00a0";
     return prefix + val + "\u00a0" + currency;
   }
 

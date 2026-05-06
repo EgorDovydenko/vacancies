@@ -44,15 +44,6 @@ export const config = {
     } as const;
   },
 
-  /** hh.ru API (опционально) */
-  get hh() {
-    return {
-      apiToken: process.env["HH_API_TOKEN"],
-      clientId: process.env["HH_CLIENT_ID"],
-      clientSecret: process.env["HH_CLIENT_SECRET"],
-    } as const;
-  },
-
   /** Параметры работы бота */
   get bot() {
     return {
@@ -67,7 +58,6 @@ export const config = {
   /** Включённые источники вакансий */
   get sources() {
     return {
-      hh: boolEnv("SOURCE_HH", true),
       rabotaby: boolEnv("SOURCE_RABOTABY", true),
       devby: boolEnv("SOURCE_DEVBY", true),
       habr: boolEnv("SOURCE_HABR", true),

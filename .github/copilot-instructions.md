@@ -47,7 +47,6 @@ src/
   search-queries.ts  — централизованный реестр поисковых запросов по категориям
   sources/
     index.ts         — реестр источников (getSources)
-    hh.ts            — hh.ru (REST API)
     rabotaby.ts      — rabota.by (HTML, движок hh.ru)
     devby.ts         — jobs.devby.io (HTML)
     habr.ts          — career.habr.com (JSON из <script> тега, React SPA)
@@ -58,7 +57,7 @@ data/
 
 ### Интерфейс Source (src/types.ts)
 
-- `scrape(country)` — для источников с фильтрацией по стране (hh, rabota.by, dev.by)
+- `scrape(country)` — для источников с фильтрацией по стране (rabota.by, dev.by)
 - `scrapeAll()` — для источников без привязки к стране (habr.career): один прогон, страна определяется из данных вакансии
 - `enrichVacancy(vacancy)` — опционально, обогащение данными со страницы вакансии
 
@@ -124,12 +123,10 @@ data/
 ```env
 TELEGRAM_BOT_TOKEN=       # обязательно
 TELEGRAM_CHANNEL_ID=      # обязательно
-HH_API_TOKEN=             # опционально
 PUBLISH_INTERVAL_MINUTES= # интервал cron, по умолч. 60
 REQUEST_DELAY_MS=         # задержка между запросами, по умолч. 2000
 MAX_VACANCIES_PER_RUN=    # лимит публикаций за цикл, по умолч. 5
 STORE_TTL_DAYS=           # TTL записей в store, по умолч. 30
-SOURCE_HH=true/false
 SOURCE_RABOTABY=true/false
 SOURCE_DEVBY=true/false
 SOURCE_HABR=true/false
