@@ -55,6 +55,14 @@ export const config = {
     } as const;
   },
 
+  /** База данных PostgreSQL */
+  get database() {
+    return {
+      url: requireEnv("DATABASE_URL"),
+      ssl: boolEnv("DATABASE_SSL", true),
+    } as const;
+  },
+
   /** Включённые источники вакансий */
   get sources() {
     return {

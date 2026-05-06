@@ -18,11 +18,16 @@ const SEND_DELAY_MS = 3_000;
 
 const store = new PublishedStore();
 
+/** Инициализирует хранилище (создаёт таблицу, чистит устаревшие записи) */
+export async function initStore(): Promise<void> {
+  await store.init();
+}
+
 // ─── Публикация одной вакансии ────────────────────────────────────────────────
 
 async function publishVacancy(vacancy: Vacancy, tag: string): Promise<void> {
   await sendMessage(formatVacancy(vacancy));
-  store.add(vacancy.id);
+  await store.add(vacancy.id);
   logger.info(
     `[${tag}] ✓ Опубликована: "${vacancy.title}" @ ${vacancy.company}`,
   );
@@ -60,7 +65,7 @@ async function publishParsed(
   let published = 0;
 
   for (const item of parsed) {
-    if (store.has(item.sourceId)) {
+    if (await store.has(item.sourceId)) {
       logger.debug(`[${tag}] Уже опубликована: ${item.sourceId}`);
       continue;
     }
@@ -125,6 +130,6 @@ export async function runPublishCycle(): Promise<void> {
   }
 
   logger.info(
-    `═══ Цикл завершён. Опубликовано: ${total}. В базе: ${store.size} ═══`,
+    `═══ Цикл завершён. Опубликовано: ${total}. В базе: ${await store.size} ═══`,
   );
 }
