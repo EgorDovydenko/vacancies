@@ -8,7 +8,7 @@
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "dev:watch": "nodemon --exec ts-node src/index.ts",
-    "store:clear": "ts-node -e \"require('dotenv').config(); const {PublishedStore} = require('./src/store'); const s = new PublishedStore(); s.init().then(() => s.clear()).then(() => { console.log('Store cleared.'); process.exit(0); })\"",
+    "store:clear": "ts-node -e \"require('dotenv').config(); const {PublishedStore} = require('./src/store'); const s = new PublishedStore(); s.init().then(() => s.clear()).then(() => { console.log('Store cleared!'); process.exit(0); })\"",
     "store:show": "ts-node -e \"require('dotenv').config(); const {PublishedStore} = require('./src/store'); const s = new PublishedStore(); s.init().then(() => s.size).then(n => { console.log('Records:', n); process.exit(0); })\""
   },
   "dependencies": {
