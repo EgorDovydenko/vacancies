@@ -1,4 +1,5 @@
 import "dotenv/config";
+import http from "node:http";
 import { CronJob } from "cron";
 import { runPublishCycle } from "./publisher";
 import { config } from "./config";
@@ -23,3 +24,13 @@ const job = new CronJob(cronExpr, () => {
 job.start();
 
 logger.info("Планировщик запущен. Бот работает...");
+
+// Минимальный HTTP-сервер для Render.com (требует открытый порт)
+const port = process.env["PORT"] ?? 3000;
+const server = http.createServer((_req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("OK");
+});
+server.listen(port, () => {
+  logger.info(`Health-check сервер запущен на порту ${port}`);
+});
