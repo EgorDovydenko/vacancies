@@ -105,6 +105,8 @@ export async function runPublishCycle(): Promise<void> {
   }
   cycleRunning = true;
   logger.info("═══ Запуск цикла публикации ═══");
+  logger.info(`Текущая рабочая директория: ${process.cwd()}`);
+  logger.info(`Уже опубликовано вакансий в базе: ${store.size}`);
   let total = 0;
 
   try {
