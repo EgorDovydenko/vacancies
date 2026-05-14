@@ -23,7 +23,41 @@ export const SEARCH_QUERIES: Record<JobCategory, string[]> = {
     "kotlin",
     "ruby",
     "rust",
+    "scala",
+    ".net",
+    "c#",
+    "django",
+    "laravel",
   ],
 
   fullstack: ["fullstack", "full-stack"],
+
+  qa: [
+    "qa engineer",
+    "тестировщик",
+    "test engineer",
+    "автотестирование",
+    "manual qa",
+    "automation qa",
+  ],
+
+  devops: [
+    "devops",
+    "platform engineer",
+    "cloud engineer",
+    "kubernetes",
+    "terraform",
+    "ansible",
+  ],
+
+  design: [
+    "ui/ux",
+    "ux designer",
+    "ui designer",
+    "product designer",
+    "web designer",
+    "figma",
+  ],
+
+  other: [],
 };

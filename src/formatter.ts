@@ -12,6 +12,10 @@ const CATEGORY_EMOJI: Record<JobCategory, string> = {
   frontend: "🎨",
   backend: "⚙️",
   fullstack: "🔗",
+  qa: "🧪",
+  devops: "🚀",
+  design: "✏️",
+  other: "💼",
 };
 
 const FORMAT_LABEL: Record<WorkFormat, string> = {

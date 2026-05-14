@@ -6,6 +6,7 @@ dist/
 
 # Секреты
 .env
+.env.prod
 
 # Логи
 *.log

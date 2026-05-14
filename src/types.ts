@@ -4,7 +4,14 @@ export type Country = "BY" | "RU" | "GE" | "AM" | "KZ";
 
 export type WorkFormat = "remote" | "office" | "hybrid";
 
-export type JobCategory = "frontend" | "backend" | "fullstack";
+export type JobCategory =
+  | "frontend"
+  | "backend"
+  | "fullstack"
+  | "qa"
+  | "devops"
+  | "design"
+  | "other";
 
 export interface Vacancy {
   /** Уникальный идентификатор (формируется как sourceId + source) */

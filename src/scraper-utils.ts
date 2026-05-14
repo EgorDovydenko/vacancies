@@ -56,17 +56,34 @@ export function detectWorkFormat(text: string): WorkFormat[] {
 
 const FRONTEND_RE =
   /frontend|фронтенд|front-end|\bvue\b|\breact\b|\bangular\b|\bsvelte\b/i;
+
 const BACKEND_RE =
-  /backend|бэкенд|back-end|\bphp\b|\bjava\b|\bpython\b|\bnode\.?js\b|\bgo\b|\bgolang\b|\bruby\b|\brust\b/i;
+  /backend|бэкенд|back-end|\bphp\b|\bjava\b|\bpython\b|\bnode\.?js\b|\bgo\b|\bgolang\b|\bruby\b|\brust\b|\bscala\b|\bkotlin\b|\b\.net\b|\bc#\b|\bspring\b|\bdjango\b|\blaravel\b|\bexpress\b/i;
+
+const FULLSTACK_RE =
+  /fullstack|full-stack|фуллстек|фулл-стек/i;
+
+const QA_RE =
+  /\bqa\b|quality assurance|тестировщик|тестирование|test engineer|sdet|автотест|ручное тестирование|manual test|automation test|appium|selenium|cypress|playwright/i;
+
+const DEVOPS_RE =
+  /devops|dev-ops|sre\b|site reliability|infrastructure|инфраструктур|cloud engineer|platform engineer|\bdocker\b|\bkubernetes\b|\bk8s\b|\bterraform\b|\bansible\b|\bci\/cd\b|\bjenkins\b|\bhelm\b|\blinux admin\b/i;
+
+const DESIGN_RE =
+  /ui\/ux|ux\/ui|\bux\b|\bui\b|web design|веб-дизайн|дизайнер|designer|figma|graphic design|product design/i;
 
 /**
  * Определяет категорию вакансии по заголовку.
- * При неоднозначности — fullstack.
+ * Порядок проверок: специализированные категории → fullstack → other.
  */
 export function detectCategory(title: string): JobCategory {
+  if (DEVOPS_RE.test(title)) return "devops";
+  if (QA_RE.test(title)) return "qa";
+  if (DESIGN_RE.test(title)) return "design";
+  if (FULLSTACK_RE.test(title)) return "fullstack";
   if (FRONTEND_RE.test(title)) return "frontend";
   if (BACKEND_RE.test(title)) return "backend";
-  return "fullstack";
+  return "other";
 }
 
 // ─── Страна по городу ─────────────────────────────────────────────────────────
